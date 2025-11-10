@@ -52,7 +52,7 @@
         </div>
         <!-- Hora -->
         <div class="flex items-center justify-center">
-          <span class="text-sm font-normal text-black dark:text-white text-center font-numbers" id="current-time">
+          <span class="text-sm font-bold text-black dark:text-white text-center font-numbers" id="current-time">
             {{ \Carbon\Carbon::now()->format('H:i:s') }}
           </span>
         </div>

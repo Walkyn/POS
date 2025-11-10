@@ -2,7 +2,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build && del public\\hot",
+        "build": "vite build && del public\\hot && rm -rf public/storage",
         "dev": "vite"
     },
     "devDependencies": {
