@@ -13,7 +13,6 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        // Por ahora solo redirige a home sin validación
         return redirect()->route('home');
     }
 }

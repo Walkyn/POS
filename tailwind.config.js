@@ -15,7 +15,6 @@ export default {
   theme: {
     fontFamily: {
       sans: ['Nunito Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-      satoshi: ['Satoshi', 'sans-serif'],
       nunito: ['Nunito Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
       'source-code-pro': ['Source Code Pro', 'monospace'],
     },

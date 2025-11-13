@@ -58,7 +58,7 @@ const chart02 = () => {
     legend: {
       position: "top",
       horizontalAlign: "left",
-      fontFamily: "Satoshi",
+      fontFamily: "'Nunito Sans', sans-serif",
       fontWeight: 500,
       fontSize: "14px",
 

@@ -39,7 +39,7 @@
       </button>
       <!-- Hamburger Toggle BTN -->
       <a class="block flex-shrink-0 lg:hidden" href="index.html">
-        <img src="./images/logo/logo-icon.svg" alt="Logo" />
+        <img src="{{ asset('images/logo/logo-icon.svg') }}" alt="Logo" />
       </a>
     </div>
     <div class="hidden sm:flex sm:flex-1 sm:justify-center">
@@ -289,7 +289,7 @@
                   href="messages.html"
                 >
                   <div class="h-12.5 w-12.5 rounded-full">
-                    <img src="./images/user/user-02.png" alt="User" />
+                    <img src="{{ asset('images/user/user-02.png') }}" alt="User" />
                   </div>
 
                   <div>
@@ -307,7 +307,7 @@
                   href="messages.html"
                 >
                   <div class="h-12.5 w-12.5 rounded-full">
-                    <img src="./images/user/user-01.png" alt="User" />
+                    <img src="{{ asset('images/user/user-01.png') }}" alt="User" />
                   </div>
 
                   <div>
@@ -325,7 +325,7 @@
                   href="messages.html"
                 >
                   <div class="h-12.5 w-12.5 rounded-full">
-                    <img src="./images/user/user-03.png" alt="User" />
+                    <img src="{{ asset('images/user/user-03.png') }}" alt="User" />
                   </div>
 
                   <div>
@@ -343,7 +343,7 @@
                   href="messages.html"
                 >
                   <div class="h-12.5 w-12.5 rounded-full">
-                    <img src="./images/user/user-04.png" alt="User" />
+                    <img src="{{ asset('images/user/user-04.png') }}" alt="User" />
                   </div>
 
                   <div>
@@ -361,7 +361,7 @@
                   href="messages.html"
                 >
                   <div class="h-12.5 w-12.5 rounded-full">
-                    <img src="./images/user/user-02.png" alt="User" />
+                    <img src="{{ asset('images/user/user-02.png') }}" alt="User" />
                   </div>
 
                   <div>
@@ -399,7 +399,7 @@
           </span>
 
           <span class="h-12 w-12 rounded-full">
-            <img src="./images/user/user-01.png" alt="User" />
+            <img src="{{ asset('images/user/user-01.png') }}" alt="User" />
           </span>
 
           <svg

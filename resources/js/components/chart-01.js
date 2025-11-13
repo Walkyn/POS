@@ -21,7 +21,7 @@ const chart01 = () => {
     },
     colors: ["#3C50E0", "#80CAEE"],
     chart: {
-      fontFamily: "Satoshi, sans-serif",
+      fontFamily: "'Nunito Sans', sans-serif",
       height: 335,
       type: "area",
       dropShadow: {

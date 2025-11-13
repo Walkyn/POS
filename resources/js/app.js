@@ -1,7 +1,6 @@
 import './bootstrap';
 import "jsvectormap/dist/jsvectormap.css";
 import "flatpickr/dist/flatpickr.min.css";
-import '../css/satoshi.css';
 import "../css/app.css";
 import 'flowbite';
 

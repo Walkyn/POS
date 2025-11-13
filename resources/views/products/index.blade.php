@@ -2,8 +2,6 @@
 @section('title', 'Productos')
 
 @section('content')
-
-    <!-- ===== Main Content Start ===== -->
     <main>
         <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
             <!-- Breadcrumb Start -->
@@ -23,21 +21,19 @@
             </div>
             <!-- Breadcrumb End -->
 
-            <!-- ====== Alerts Start -->
+            <!-- ====== Alerts Start ====== -->
             @include('partials.alerts')
-            <!-- ====== Alerts End -->
+            <!-- ====== Alerts End ====== -->
 
-            <!-- ====== Table Section Start -->
+            <!-- ====== Table Section Start ====== -->
             <div class="flex flex-col gap-10">
-
-                <!-- ====== Table Database Start -->
+                <!-- ====== Table Database Start ====== -->
                 @include('partials.table.table-products')
-                <!-- ====== Table Database End -->
-
+                <!-- ====== Table Database End ====== -->
             </div>
-            <!-- ====== Table Section End -->
+            <!-- ====== Table Section End ====== -->
         </div>
+        <!-- ===== Main Content End ===== -->
     </main>
-    <!-- ===== Main Content End ===== -->
 
 @endsection

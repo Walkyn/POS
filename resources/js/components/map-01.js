@@ -21,7 +21,7 @@ const map01 = () => {
       },
       regionLabelStyle: {
         initial: {
-          fontFamily: "Satoshi",
+          fontFamily: "'Nunito Sans', sans-serif",
           fontWeight: "semibold",
           fill: "#fff",
         },

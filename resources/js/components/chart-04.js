@@ -14,7 +14,7 @@ const chart04 = () => {
     ],
     colors: ["#3C50E0"],
     chart: {
-      fontFamily: "Satoshi, sans-serif",
+      fontFamily: "'Nunito Sans', sans-serif",
       type: "bar",
       height: 350,
       toolbar: {
@@ -81,7 +81,7 @@ const chart04 = () => {
       show: true,
       position: "top",
       horizontalAlign: "left",
-      fontFamily: "Satoshi",
+      fontFamily: "'Nunito Sans', sans-serif",
 
       markers: {
         radius: 99,
