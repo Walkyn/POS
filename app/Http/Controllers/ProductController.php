@@ -11,6 +11,11 @@ class ProductController extends Controller
         return view('products.index');
     }
 
+    public function lotes()
+    {
+        return view('products.productos-lotes');
+    }
+
     public function create()
     {
         return view('products.create');
