@@ -17,8 +17,19 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body x-data="{ page: 'ecommerce', 'loaded': true, 'darkMode': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }" x-init="darkMode = JSON.parse(localStorage.getItem('darkMode'));
-$watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))" :class="{ 'dark text-bodydark bg-boxdark-2': darkMode === true }">
+<body x-data="{ page: 'ecommerce', 'loaded': true, 'darkMode': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }" x-init="
+darkMode = JSON.parse(localStorage.getItem('darkMode'));
+$watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)));
+const path = window.location.pathname;
+if (path.includes('/inventory')) page = 'inventario';
+else if (path.includes('/products')) page = 'products';
+else if (path.includes('/customers')) page = 'customers';
+else if (path.includes('/sales/create')) page = 'sales.create';
+else if (path.includes('/sales/close-shift')) page = 'sales.close-shift';
+else if (path.includes('/sales/shift-history')) page = 'sales.shift-history';
+else if (path.includes('/sales')) page = 'sales';
+else if (path.includes('/reports')) page = 'reports';
+" :class="{ 'dark text-bodydark bg-boxdark-2': darkMode === true }">
 
     <!-- ===== Preloader Start ===== -->
     @include('partials/preloader')

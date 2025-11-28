@@ -10,6 +10,7 @@ window.$ = window.jQuery = $;
 import Alpine from "alpinejs";
 import persist from "@alpinejs/persist";
 import flatpickr from "flatpickr";
+import { Spanish } from "flatpickr/dist/l10n/es";
 
 import chart01 from "./components/chart-01";
 import chart02 from "./components/chart-02";
@@ -69,13 +70,18 @@ flatpickr(".datepicker", {
 
 flatpickr(".form-datepicker", {
   mode: "single",
-  static: true,
-  monthSelectorType: "static",
-  dateFormat: "M j, Y",
-  prevArrow:
-    '<svg class="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M5.4 10.8l1.4-1.4-4-4 4-4L5.4 0 0 5.4z" /></svg>',
-  nextArrow:
-    '<svg class="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M1.4 10.8L0 9.4l4-4-4-4L1.4 0l5.4 5.4z" /></svg>',
+  dateFormat: "Y-m-d",
+  locale: Spanish,
+  onReady: (selectedDates, dateStr, instance) => {
+    const customClass = instance.element.getAttribute("data-class");
+    if (customClass && instance.calendarContainer) {
+      instance.calendarContainer.classList.add(customClass);
+    }
+  },
+  onChange: (selectedDates, dateStr, instance) => {
+    instance.element.value = dateStr;
+    instance.element.dispatchEvent(new Event('change', { bubbles: true }));
+  },
 });
 
 // Document Loaded

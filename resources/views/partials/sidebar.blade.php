@@ -24,7 +24,14 @@
 
     <div class="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
         <!-- Sidebar Menu -->
-        <nav class="mt-5 px-4 lg:mt-9 lg:px-6" x-data="{ selected: $persist('Dashboard') }">
+        <nav class="mt-5 px-4 lg:mt-9 lg:px-6" x-data="{ 
+            selected: $persist('Dashboard'),
+            turnoOpen: false,
+            toggleTurno() {
+                this.turnoOpen = !this.turnoOpen;
+                this.selected = 'Forms';
+            }
+        }">
             <!-- Menu Group -->
             <div>
                 <h3 class="mb-4 ml-4 text-sm font-medium text-bodydark2">MENU</h3>
@@ -47,13 +54,13 @@
                             href="#" @click.prevent="selected = (selected === 'Forms' ? '':'Forms')"
                             :class="{
                                 'bg-graydark dark:bg-meta-4': (selected === 'Forms') || (page === 'formElements' ||
-                                    page === 'formLayout')
+                                    page === 'formLayout' || page === 'sales.create' || page === 'sales' || page === 'sales.close-shift' || page === 'sales.shift-history')
                             }">
                             <i class="fas fa-shopping-cart text-lg w-5 flex items-center justify-center"></i>
                             <span>Ventas</span>
 
                             <svg class="absolute right-4 top-1/2 -translate-y-1/2 fill-current"
-                                :class="{ 'rotate-180': (selected === 'Forms') }" width="20" height="20"
+                                :class="{ 'rotate-180': (selected === 'Forms') || (page === 'sales.create' || page === 'sales' || page === 'sales.close-shift' || page === 'sales.shift-history') }" width="20" height="20"
                                 viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                     d="M4.41107 6.9107C4.73651 6.58527 5.26414 6.58527 5.58958 6.9107L10.0003 11.3214L14.4111 6.91071C14.7365 6.58527 15.2641 6.58527 15.5896 6.91071C15.915 7.23614 15.915 7.76378 15.5896 8.08922L10.5896 13.0892C10.2641 13.4147 9.73651 13.4147 9.41107 13.0892L4.41107 8.08922C4.08563 7.76378 4.08563 7.23614 4.41107 6.9107Z"
@@ -63,21 +70,58 @@
 
                         <!-- Dropdown Menu Start -->
                         <div class="translate transform overflow-hidden"
-                            :class="(selected === 'Forms') ? 'block' : 'hidden'">
+                            :class="(selected === 'Forms') || (page === 'sales.create' || page === 'sales' || page === 'sales.close-shift' || page === 'sales.shift-history') ? 'block' : 'hidden'">
                             <ul class="mb-5.5 mt-4 flex flex-col gap-2.5 pl-8">
                                 <li>
                                     <a class="group relative flex items-center gap-1 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white"
-                                        href="form-elements.html" :class="page === 'formElements' && '!text-white'">
-                                        <span class="w-5 flex items-center justify-center text-bodydark2 group-hover:text-white" :class="page === 'formElements' && '!text-white'">•</span>
+                                        href="{{ route('sales.create') }}" :class="page === 'sales.create' && '!text-white'">
+                                        <span class="w-5 flex items-center justify-center text-bodydark2 group-hover:text-white" :class="page === 'sales.create' && '!text-white'">•</span>
                                         <span>Nueva Venta</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a class="group relative flex items-center gap-1 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white"
-                                        href="form-layout.html" :class="page === 'formLayout' && '!text-white'">
-                                        <span class="w-5 flex items-center justify-center text-bodydark2 group-hover:text-white" :class="page === 'formLayout' && '!text-white'">•</span>
+                                        href="{{ route('sales') }}" :class="page === 'sales' && '!text-white'">
+                                        <span class="w-5 flex items-center justify-center text-bodydark2 group-hover:text-white" :class="page === 'sales' && '!text-white'">•</span>
                                         <span>Historial</span>
                                     </a>
+                                </li>
+                                <li>
+                                    <a class="group relative flex items-center gap-1 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white"
+                                        href="#" @click.prevent.stop="toggleTurno()"
+                                        :class="{
+                                            '!text-white': turnoOpen || (page === 'sales.close-shift' || page === 'sales.shift-history')
+                                        }">
+                                        <span class="w-5 flex items-center justify-center text-bodydark2 group-hover:text-white" :class="turnoOpen || (page === 'sales.close-shift' || page === 'sales.shift-history') && '!text-white'">•</span>
+                                        <span>Turno</span>
+                                        <svg class="absolute right-4 top-1/2 -translate-y-1/2 fill-current w-4 h-4"
+                                            :class="{ 'rotate-180': turnoOpen || (page === 'sales.close-shift' || page === 'sales.shift-history') }" width="16" height="16"
+                                            viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                                d="M4.41107 6.9107C4.73651 6.58527 5.26414 6.58527 5.58958 6.9107L10.0003 11.3214L14.4111 6.91071C14.7365 6.58527 15.2641 6.58527 15.5896 6.91071C15.915 7.23614 15.915 7.76378 15.5896 8.08922L10.5896 13.0892C10.2641 13.4147 9.73651 13.4147 9.41107 13.0892L4.41107 8.08922C4.08563 7.76378 4.08563 7.23614 4.41107 6.9107Z"
+                                                fill="" />
+                                        </svg>
+                                    </a>
+                                    <!-- Submenu Turno -->
+                                    <div class="translate transform overflow-hidden"
+                                        :class="turnoOpen || (page === 'sales.close-shift' || page === 'sales.shift-history') ? 'block' : 'hidden'">
+                                        <ul class="mb-2 mt-2 flex flex-col gap-2 pl-6">
+                                            <li>
+                                                <a class="group relative flex items-center gap-1 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white"
+                                                    href="{{ route('sales.close-shift') }}" :class="page === 'sales.close-shift' && '!text-white'">
+                                                    <span class="w-3 flex items-center justify-center text-bodydark2 group-hover:text-white" :class="page === 'sales.close-shift' && '!text-white'">◦</span>
+                                                    <span>Cierre</span>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="group relative flex items-center gap-1 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white"
+                                                    href="{{ route('sales.shift-history') }}" :class="page === 'sales.shift-history' && '!text-white'">
+                                                    <span class="w-3 flex items-center justify-center text-bodydark2 group-hover:text-white" :class="page === 'sales.shift-history' && '!text-white'">◦</span>
+                                                    <span>Historial</span>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </li>
                             </ul>
                         </div>
@@ -100,9 +144,9 @@
                     <!-- Menu Item Clientes -->
                     <li>
                         <a class="group relative flex items-center gap-3 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4"
-                            href="profile.html" @click="selected = (selected === 'Profile' ? '':'Profile')"
-                            :class="{ 'bg-graydark dark:bg-meta-4': (selected === 'Profile') && (page === 'profile') }"
-                            :class="page === 'profile' && 'bg-graydark'">
+                            href="{{ route('customers') }}" @click="selected = (selected === 'Customers' ? '':'Customers')"
+                            :class="{ 'bg-graydark dark:bg-meta-4': (selected === 'Customers') && (page === 'customers') }"
+                            :class="page === 'customers' && 'bg-graydark'">
                             <i class="fas fa-user-friends text-lg w-5 flex items-center justify-center"></i>
                             <span>Clientes</span>
                         </a>
@@ -114,7 +158,7 @@
                         <a class="group relative flex items-center gap-3 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4"
                             href="#" @click.prevent="selected = (selected === 'Administrar' ? '':'Administrar')"
                             :class="{
-                                'bg-graydark dark:bg-meta-4': (selected === 'Administrar') || (page === 'reportes' ||
+                                'bg-graydark dark:bg-meta-4': (selected === 'Administrar') || (page === 'reports' ||
                                     page === 'inventario' || page === 'informes')
                             }">
                             <i class="fas fa-tasks text-lg w-5 flex items-center justify-center"></i>
@@ -135,16 +179,16 @@
                             <ul class="mb-5.5 mt-4 flex flex-col gap-2.5 pl-8">
                                 <li>
                                     <a class="group relative flex items-center gap-1 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white"
-                                        href="reportes.html" :class="page === 'reportes' && '!text-white'">
-                                        <span class="w-5 flex items-center justify-center text-bodydark2 group-hover:text-white" :class="page === 'reportes' && '!text-white'">•</span>
-                                        <span>Reportes</span>
+                                        href="{{ route('inventory') }}" :class="page === 'inventario' && '!text-white'">
+                                        <span class="w-5 flex items-center justify-center text-bodydark2 group-hover:text-white" :class="page === 'inventario' && '!text-white'">•</span>
+                                        <span>Inventario</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a class="group relative flex items-center gap-1 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white"
-                                        href="inventario.html" :class="page === 'inventario' && '!text-white'">
-                                        <span class="w-5 flex items-center justify-center text-bodydark2 group-hover:text-white" :class="page === 'inventario' && '!text-white'">•</span>
-                                        <span>Inventario</span>
+                                        href="{{ route('reports') }}" :class="page === 'reports' && '!text-white'">
+                                        <span class="w-5 flex items-center justify-center text-bodydark2 group-hover:text-white" :class="page === 'reports' && '!text-white'">•</span>
+                                        <span>Reportes</span>
                                     </a>
                                 </li>
                                 <li>
