@@ -8,6 +8,11 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ReportsController;
+use App\Http\Controllers\InformesController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DatabaseController;
+use App\Http\Controllers\UserController;
 
 Route::get('/', [LoginController::class, 'index'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
@@ -34,3 +39,17 @@ Route::get('/inventory/expired', [InventoryController::class, 'expired'])->name(
 Route::get('/inventory/out-of-stock', [InventoryController::class, 'outOfStock'])->name('inventory.out-of-stock');
 
 Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
+Route::get('/reports/tickets', [ReportsController::class, 'tickets'])->name('reports.tickets');
+
+Route::get('/informes', [InformesController::class, 'index'])->name('informes');
+
+Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+
+Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+
+Route::get('/database', [DatabaseController::class, 'index'])->name('database');
+
+Route::get('/users', [UserController::class, 'index'])->name('users');
+Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+Route::get('/users/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');

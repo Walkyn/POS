@@ -1,5 +1,14 @@
-<main class="h-full pb-16 overflow-y-auto" x-data="{ 
+<main class="h-full pb-16 overflow-y-auto" 
+    @limpiar-filtros.window="filtroPeriodo = 'hoy'; mesSeleccionado = ''; anioSeleccionado = new Date().getFullYear(); usuarioSeleccionado = ''; filtrarInventario();"
+    @exportar-reporte.window="exportarReporte()"
+    @seleccionar-periodo.window="seleccionarPeriodo($event.detail.periodo); filtrarInventario()"
+    @cambiar-anio.window="anioSeleccionado = parseInt($event.detail.anio); if (mesSeleccionado) { seleccionarPeriodo('mes'); } filtrarInventario()"
+    @cambiar-mes.window="mesSeleccionado = $event.detail.mes ? parseInt($event.detail.mes) : ''; if (mesSeleccionado) { seleccionarPeriodo('mes'); } filtrarInventario()"
+    @cambiar-usuario.window="usuarioSeleccionado = $event.detail.usuario; filtrarInventario()"
+    x-data="{ 
     searchQuery: '',
+    activeTab: 'ventas',
+    isTicketsPage: window.location.pathname.includes('/reports/tickets'),
     stockMinimo: '',
     stockMaximo: '',
     diferenciaMinima: '',
@@ -13,6 +22,7 @@
     mesSeleccionado: '',
     anioSeleccionado: new Date().getFullYear(),
     usuarioSeleccionado: '',
+    fechaSeleccionada: '',
     showMesDropdown: false,
     showUsuarioDropdown: false,
     usuarios: [
@@ -51,16 +61,20 @@
             this.mesSeleccionado = '';
         }
     },
+    exportarReporte() {
+        this.exportarExcel();
+    },
     formatearFechaHora(fechaHora) {
         if (!fechaHora) return 'N/A';
         const date = new Date(fechaHora);
-        return date.toLocaleString('es-ES', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+                      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        const dia = date.getDate();
+        const mes = meses[date.getMonth()];
+        const anio = date.getFullYear();
+        const hora = date.getHours().toString().padStart(2, '0');
+        const minutos = date.getMinutes().toString().padStart(2, '0');
+        return `${dia} de ${mes} del ${anio}, ${hora}:${minutos}`;
     },
     exportarExcel() {
         // Resetear progreso
@@ -120,11 +134,9 @@
             nombre: 'Laptop Dell Inspiron 15',
             categoria: 'Electrónica',
             lote: 'LOTE-001',
-            precio_costo: 800.00,
-            precio_venta: 1200.00,
-            precio_mayoreo: 1000.00,
-            stock_actual: 10,
-            stock_fisico: 12
+            precio: 1200.00,
+            cantidad: 2,
+            fecha_hora: '2025-01-15 14:30:00'
         },
         {
             id: 2,
@@ -132,23 +144,9 @@
             nombre: 'Mouse Inalámbrico Logitech',
             categoria: 'Accesorios',
             lote: 'LOTE-002',
-            precio_costo: 25.50,
-            precio_venta: 35.50,
-            precio_mayoreo: 30.00,
-            stock_actual: 25,
-            stock_fisico: 23
-        },
-        {
-            id: 3,
-            codigo: 'KB003',
-            nombre: 'Teclado Mecánico RGB',
-            categoria: 'Periféricos',
-            lote: 'LOTE-003',
-            precio_costo: 80.00,
-            precio_venta: 120.00,
-            precio_mayoreo: 100.00,
-            stock_actual: 8,
-            stock_fisico: 8
+            precio: 35.50,
+            cantidad: 5,
+            fecha_hora: '2025-01-15 16:45:00'
         }
     ],
     inventarioFiltrado: [],
@@ -158,6 +156,68 @@
     filtrarInventario() {
         const query = this.searchQuery.toLowerCase().trim();
         let filtrados = this.inventario;
+        
+        // Obtener fecha actual
+        const hoy = new Date();
+        const fechaHoy = hoy.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+        
+        // Filtrar por fecha seleccionada
+        if (this.fechaSeleccionada && this.fechaSeleccionada !== '') {
+            filtrados = filtrados.filter(item => {
+                // Si el item tiene fecha, filtrar por ella
+                if (item.fecha) {
+                    return item.fecha === this.fechaSeleccionada;
+                }
+                // Si el item tiene fecha_hora, extraer la fecha
+                if (item.fecha_hora) {
+                    const fechaItem = item.fecha_hora.split(' ')[0];
+                    return fechaItem === this.fechaSeleccionada;
+                }
+                return true;
+            });
+        } else if (!this.mesSeleccionado && !this.usuarioSeleccionado && (!this.anioSeleccionado || this.anioSeleccionado === new Date().getFullYear())) {
+            // Por defecto, mostrar items del día actual si no hay otros filtros y el item tiene fecha
+            filtrados = filtrados.filter(item => {
+                if (item.fecha) {
+                    return item.fecha === fechaHoy;
+                }
+                if (item.fecha_hora) {
+                    const fechaItem = item.fecha_hora.split(' ')[0];
+                    return fechaItem === fechaHoy;
+                }
+                return true; // Si no tiene fecha, mostrar todos
+            });
+        }
+        
+        // Filtrar por año (si está seleccionado y no hay fecha específica)
+        if (this.anioSeleccionado && !this.fechaSeleccionada) {
+            filtrados = filtrados.filter(item => {
+                if (item.fecha) {
+                    const fechaItem = new Date(item.fecha);
+                    return fechaItem.getFullYear() === this.anioSeleccionado;
+                }
+                if (item.fecha_hora) {
+                    const fechaItem = new Date(item.fecha_hora.split(' ')[0]);
+                    return fechaItem.getFullYear() === this.anioSeleccionado;
+                }
+                return true;
+            });
+        }
+        
+        // Filtrar por mes (si está seleccionado y no hay fecha específica)
+        if (this.mesSeleccionado && this.mesSeleccionado !== '' && !this.fechaSeleccionada) {
+            filtrados = filtrados.filter(item => {
+                if (item.fecha) {
+                    const fechaItem = new Date(item.fecha);
+                    return fechaItem.getMonth() + 1 === parseInt(this.mesSeleccionado);
+                }
+                if (item.fecha_hora) {
+                    const fechaItem = new Date(item.fecha_hora.split(' ')[0]);
+                    return fechaItem.getMonth() + 1 === parseInt(this.mesSeleccionado);
+                }
+                return true;
+            });
+        }
         
         // Filtrar por rango de stock
         if (this.stockMinimo && this.stockMinimo !== '') {
@@ -216,11 +276,11 @@
     <div>
         <section class="dark:bg-gray-900 antialiased">
             <div class="max-w-screen-2xl">
-                <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-none rounded-lg overflow-hidden">
+                <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-none rounded-lg">
                     <div
-                        class="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0 md:space-x-4 p-4">
+                        class="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0 md:space-x-4 p-4 relative z-10 overflow-visible">
                         {{-- Buscador --}}
-                        <div class="w-full md:w-1/2 lg:w-2/3 order-2 md:order-1 mt-2 md:mt-0">
+                        <div class="w-full md:w-1/2 lg:w-2/3 order-1 md:order-1 mt-2 md:mt-0">
                             <form class="flex items-center" id="searchForm">
                                 <label for="simple-search" class="sr-only">Buscar en inventario</label>
                                 <div class="relative w-full group">
@@ -251,12 +311,22 @@
                             </form>
                         </div>
 
+                        {{-- Botón de Exportar --}}
+                        <div class="w-full md:w-auto order-2 md:order-2">
+                            <button @click="exportarExcel()"
+                                type="button"
+                                class="w-full md:w-auto flex items-center justify-center py-2.5 px-4 md:px-6 text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 rounded-lg dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-900">
+                                <i class="fas fa-file-excel mr-2"></i>
+                                Exportar
+                            </button>
+                        </div>
+
                         {{-- Botón de Filtros --}}
-                        <div class="w-full md:w-auto order-1 md:order-2 relative" x-data="{ 
+                        <div class="w-full md:w-auto order-3 md:order-3 relative z-50 overflow-visible" x-data="{ 
                             filterOpen: false,
                             cerrarTodasLasSecciones() {
                                 setTimeout(() => {
-                                    const accordionButtons = document.querySelectorAll('#filterDropdown [data-accordion-target]');
+                                    const accordionButtons = document.querySelectorAll('#filterDropdownReportsTable [data-accordion-target]');
                                     accordionButtons.forEach(btn => {
                                         const target = btn.getAttribute('data-accordion-target');
                                         const body = document.querySelector(target);
@@ -270,13 +340,13 @@
                                 }, 50);
                             }
                         }">
-                            <button id="filterDropdownButton"
+                            <button id="filterDropdownButtonReportsTable"
                                 @click="filterOpen = !filterOpen; if (filterOpen) cerrarTodasLasSecciones();"
                                 type="button"
                                 class="w-full md:w-auto flex items-center justify-between py-2.5 px-4 md:px-6 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                                 <span class="flex items-center">
-                                    <i class="fas fa-cog mr-2 text-gray-400"></i>
-                                    Opciones
+                                    <i class="fas fa-filter mr-2 text-gray-400"></i>
+                                    Filtrar
                                 </span>
                                 <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': filterOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -284,7 +354,7 @@
                             </button>
 
                             {{-- Dropdown de Filtros --}}
-                            <div id="filterDropdown"
+                            <div id="filterDropdownReportsTable"
                                 x-show="filterOpen"
                                 x-transition:enter="transition ease-out duration-200"
                                 x-transition:enter-start="opacity-0 scale-95"
@@ -294,25 +364,24 @@
                                 x-transition:leave-end="opacity-0 scale-95"
                                 @click.away="filterOpen = false"
                                 x-cloak
-                                class="absolute z-50 w-full md:w-80 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                class="absolute z-50 w-full md:w-80 mt-2 right-0 md:right-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                                 <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                                    <h6 class="text-sm font-medium text-gray-900 dark:text-white">Opciones</h6>
-                                    <button type="button" id="limpiar-filtros"
-                                        @click="filtroPeriodo = 'hoy'; mesSeleccionado = ''; anioSeleccionado = new Date().getFullYear(); usuarioSeleccionado = ''; filtrarInventario();"
+                                    <h6 class="text-sm font-medium text-gray-900 dark:text-white">Filtrar</h6>
+                                    <button type="button" id="limpiar-filtros-table"
+                                        @click="filtroPeriodo = 'hoy'; mesSeleccionado = ''; anioSeleccionado = new Date().getFullYear(); usuarioSeleccionado = ''; fechaSeleccionada = ''; filtrarInventario(); filterOpen = false;"
                                         class="text-sm font-medium text-primary-600 dark:text-primary-500 hover:underline">
                                         Limpiar
                                     </button>
                                 </div>
 
-                                <div id="accordion-flush" data-accordion="collapse" data-active-classes="text-black dark:text-white"
+                                <div id="accordion-flush-reports-table" data-accordion="collapse" data-active-classes="text-black dark:text-white"
                                     data-inactive-classes="text-gray-500 dark:text-gray-400">
-                                    {{-- Acciones --}}
-                                    <h2 id="acciones-heading">
+                                    {{-- Seleccionar Fecha --}}
+                                    <h2 id="fecha-heading-table">
                                         <button type="button"
                                             class="flex items-center justify-between w-full py-3 px-4 text-sm font-medium text-left text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                            data-accordion-target="#acciones-body" aria-expanded="false"
-                                            aria-controls="acciones-body">
-                                            <span>Acciones</span>
+                                            data-accordion-target="#fecha-body-table" aria-expanded="false" aria-controls="fecha-body-table">
+                                            <span>Seleccionar Fecha</span>
                                             <svg aria-hidden="true" data-accordion-icon="" class="w-5 h-5 shrink-0"
                                                 fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                                 <path fill-rule="evenodd" clip-rule="evenodd"
@@ -320,54 +389,26 @@
                                             </svg>
                                         </button>
                                     </h2>
-                                    <div id="acciones-body" class="hidden" aria-labelledby="acciones-heading" aria-expanded="false">
+                                    <div id="fecha-body-table" class="hidden" aria-labelledby="fecha-heading-table" aria-expanded="false">
                                         <div class="py-3 px-4 font-light border-b border-gray-200 dark:border-gray-700">
-                                            <div class="flex flex-col gap-2">
-                                                <button type="button"
-                                                    @click="actualizarInventario(); filterOpen = false"
-                                                    class="w-full flex items-center justify-center py-2.5 px-4 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-900">
-                                                    <i class="fas fa-sync-alt mr-2"></i>
-                                                    Actualizar
-                                                </button>
-                                                <button type="button"
-                                                    @click="exportarExcel(); filterOpen = false"
-                                                    class="w-full flex items-center justify-center py-2.5 px-4 text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 rounded-lg dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-900">
-                                                    <i class="fas fa-file-excel mr-2"></i>
-                                                    Exportar
-                                                </button>
+                                            <div>
+                                                <label for="fecha_filtro_table"
+                                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fecha</label>
+                                                <input type="date" 
+                                                    id="fecha_filtro_table"
+                                                    x-model="fechaSeleccionada"
+                                                    @change="filtrarInventario()"
+                                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white py-2.5 px-3">
                                             </div>
-                                        </div>
-                                    </div>
-                                    {{-- Hoy --}}
-                                    <h2 id="hoy-heading">
-                                        <button type="button"
-                                            class="flex items-center justify-between w-full py-3 px-4 text-sm font-medium text-left text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                            data-accordion-target="#hoy-body" aria-expanded="false" aria-controls="hoy-body">
-                                            <span>Hoy</span>
-                                            <svg aria-hidden="true" data-accordion-icon="" class="w-5 h-5 shrink-0"
-                                                fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                                <path fill-rule="evenodd" clip-rule="evenodd"
-                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                                            </svg>
-                                        </button>
-                                    </h2>
-                                    <div id="hoy-body" class="hidden" aria-labelledby="hoy-heading" aria-expanded="false">
-                                        <div class="py-3 px-4 font-light border-b border-gray-200 dark:border-gray-700">
-                                            <button type="button"
-                                                @click="seleccionarPeriodo('hoy')"
-                                                :class="filtroPeriodo === 'hoy' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'"
-                                                class="w-full py-2 px-4 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">
-                                                Filtrar por hoy
-                                            </button>
                                         </div>
                                     </div>
 
                                     {{-- Mes --}}
-                                    <h2 id="mes-heading">
+                                    <h2 id="mes-heading-table">
                                         <button type="button"
                                             class="flex items-center justify-between w-full py-3 px-4 text-sm font-medium text-left text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                            data-accordion-target="#mes-body" aria-expanded="false"
-                                            aria-controls="mes-body">
+                                            data-accordion-target="#mes-body-table" aria-expanded="false"
+                                            aria-controls="mes-body-table">
                                             <span>Mes</span>
                                             <svg aria-hidden="true" data-accordion-icon="" class="w-5 h-5 shrink-0"
                                                 fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -376,13 +417,13 @@
                                             </svg>
                                         </button>
                                     </h2>
-                                    <div id="mes-body" class="hidden" aria-labelledby="mes-heading" aria-expanded="false">
+                                    <div id="mes-body-table" class="hidden" aria-labelledby="mes-heading-table" aria-expanded="false">
                                         <div class="py-3 px-4 font-light border-b border-gray-200 dark:border-gray-700">
                                             <div class="space-y-3">
                                                 <div>
-                                                    <label for="anio_filtro"
+                                                    <label for="anio_filtro_table"
                                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300">Año</label>
-                                                    <select id="anio_filtro" x-model="anioSeleccionado" @change="seleccionarPeriodo('mes')"
+                                                    <select id="anio_filtro_table" x-model="anioSeleccionado" @change="seleccionarPeriodo('mes'); filtrarInventario();"
                                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white py-2.5 px-3">
                                                         <template x-for="anio in anios" :key="anio">
                                                             <option :value="anio" x-text="anio"></option>
@@ -390,9 +431,9 @@
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label for="mes_filtro"
+                                                    <label for="mes_filtro_table"
                                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300">Mes</label>
-                                                    <select id="mes_filtro" x-model="mesSeleccionado" @change="seleccionarPeriodo('mes')"
+                                                    <select id="mes_filtro_table" x-model="mesSeleccionado" @change="seleccionarPeriodo('mes'); filtrarInventario();"
                                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white py-2.5 px-3">
                                                         <option value="">Seleccione mes</option>
                                                         <template x-for="mes in meses" :key="mes.valor">
@@ -405,11 +446,11 @@
                                     </div>
 
                                     {{-- Usuario --}}
-                                    <h2 id="usuario-heading">
+                                    <h2 id="usuario-heading-table">
                                         <button type="button"
                                             class="flex items-center justify-between w-full py-3 px-4 text-sm font-medium text-left text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                            data-accordion-target="#usuario-body" aria-expanded="false"
-                                            aria-controls="usuario-body">
+                                            data-accordion-target="#usuario-body-table" aria-expanded="false"
+                                            aria-controls="usuario-body-table">
                                             <span>Usuario</span>
                                             <svg aria-hidden="true" data-accordion-icon="" class="w-5 h-5 shrink-0"
                                                 fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -418,14 +459,15 @@
                                             </svg>
                                         </button>
                                     </h2>
-                                    <div id="usuario-body" class="hidden" aria-labelledby="usuario-heading" aria-expanded="false">
+                                    <div id="usuario-body-table" class="hidden" aria-labelledby="usuario-heading-table" aria-expanded="false">
                                         <div class="py-3 px-4 font-light border-b border-gray-200 dark:border-gray-700">
                                             <ul class="space-y-2">
                                                 <template x-for="usuario in usuarios" :key="usuario.id">
                                                     <li class="flex items-center">
-                                                        <input :id="'usuario-' + usuario.id" type="radio" x-model="usuarioSeleccionado" :value="usuario.id"
+                                                        <input :id="'usuario-table-' + usuario.id" type="radio" x-model="usuarioSeleccionado" :value="usuario.id"
+                                                            @change="filtrarInventario()"
                                                             class="w-4 h-4 bg-gray-100 border-gray-300 text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
-                                                        <label :for="'usuario-' + usuario.id"
+                                                        <label :for="'usuario-table-' + usuario.id"
                                                             class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100" x-text="usuario.nombre"></label>
                                                     </li>
                                                 </template>
@@ -437,82 +479,63 @@
                         </div>
 
                         {{-- Botones Desktop --}}
-                        <div class="hidden md:flex md:flex-row gap-3 w-auto order-3">
-                            <button type="button"
-                                class="flex-1 flex items-center justify-center py-2.5 px-6 text-sm font-medium focus:outline-none rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 focus:z-10 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-700">
-                                <i class="fas fa-boxes mr-2"></i>
-                                Stock
-                            </button>
-
-                            <a href="{{ route('inventory.movements') }}"
-                                type="button"
-                                class="flex-1 flex items-center justify-center py-2.5 px-6 text-sm font-medium focus:outline-none rounded-lg border bg-white text-gray-900 border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                                <i class="fas fa-exchange-alt mr-2"></i>
-                                Movimientos
+                        <div class="hidden md:flex md:flex-row gap-3 w-auto order-4">
+                            <a href="{{ route('reports') }}"
+                                :class="!isTicketsPage 
+                                    ? 'flex items-center justify-center py-2.5 px-6 text-sm font-medium focus:outline-none rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 focus:z-10 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-700' 
+                                    : 'flex items-center justify-center py-2.5 px-6 text-sm font-medium focus:outline-none rounded-lg border bg-white text-gray-900 border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700'">
+                                <i class="fas fa-shopping-cart mr-2"></i>
+                                Ventas
                             </a>
 
-                            <a href="{{ route('inventory.expired') }}"
-                                type="button"
-                                class="flex-1 flex items-center justify-center py-2.5 px-6 text-sm font-medium focus:outline-none rounded-lg border bg-white text-gray-900 border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                                <i class="fas fa-calendar-times mr-2"></i>
-                                Vencidos
-                            </a>
-
-                            <a href="{{ route('inventory.out-of-stock') }}"
-                                type="button"
-                                class="flex-1 flex items-center justify-center py-2.5 px-6 text-sm font-medium focus:outline-none rounded-lg border bg-white text-gray-900 border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                                <i class="fas fa-exclamation-triangle mr-2"></i>
-                                Agotados
+                            <a href="{{ route('reports.tickets') }}"
+                                :class="isTicketsPage 
+                                    ? 'flex items-center justify-center py-2.5 px-6 text-sm font-medium focus:outline-none rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 focus:z-10 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-700' 
+                                    : 'flex items-center justify-center py-2.5 px-6 text-sm font-medium focus:outline-none rounded-lg border bg-white text-gray-900 border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700'">
+                                <i class="fas fa-receipt mr-2"></i>
+                                Boletas
                             </a>
                         </div>
 
-                        {{-- Dropdown Móvil --}}
-                        <div class="md:hidden w-full order-1 md:order-2 relative" x-data="{ showDropdown: false }">
-                            <button @click="showDropdown = !showDropdown"
-                                type="button"
-                                class="w-full flex items-center justify-between py-2.5 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                                <span class="flex items-center">
-                                    <i class="fas fa-boxes mr-2 text-gray-400"></i>
-                                    Stock
-                                </span>
-                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showDropdown }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </button>
-
-                            <div x-show="showDropdown"
-                                 x-transition:enter="transition ease-out duration-200"
-                                 x-transition:enter-start="opacity-0 scale-95"
-                                 x-transition:enter-end="opacity-100 scale-100"
-                                 x-transition:leave="transition ease-in duration-150"
-                                 x-transition:leave-start="opacity-100 scale-100"
-                                 x-transition:leave-end="opacity-0 scale-95"
-                                 @click.away="showDropdown = false"
-                                 x-cloak
-                                 class="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                <button type="button"
-                                    class="w-full flex items-center px-4 py-3 text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
-                                    <i class="fas fa-boxes mr-3"></i>
-                                    Stock
+                        {{-- Botones Móvil --}}
+                        <div class="md:hidden w-full order-4 flex flex-col gap-2">
+                            {{-- Dropdown Móvil Ventas/Boletas --}}
+                            <div class="relative" x-data="{ showDropdown: false }">
+                                <button @click="showDropdown = !showDropdown"
+                                    type="button"
+                                    class="w-full flex items-center justify-between py-2.5 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                                    <span class="flex items-center">
+                                        <i class="fas fa-tasks mr-2 text-gray-400"></i>
+                                        <span x-text="isTicketsPage ? 'Boletas' : 'Ventas'"></span>
+                                    </span>
+                                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showDropdown }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
                                 </button>
-                                <a href="{{ route('inventory.movements') }}"
-                                    type="button"
-                                    class="w-full flex items-center px-4 py-3 text-sm border-t border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <i class="fas fa-exchange-alt mr-3"></i>
-                                    Movimientos
-                                </a>
-                                <a href="{{ route('inventory.expired') }}"
-                                    type="button"
-                                    class="w-full flex items-center px-4 py-3 text-sm border-t border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <i class="fas fa-calendar-times mr-3"></i>
-                                    Vencidos
-                                </a>
-                                <a href="{{ route('inventory.out-of-stock') }}"
-                                    type="button"
-                                    class="w-full flex items-center px-4 py-3 text-sm border-t border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <i class="fas fa-exclamation-triangle mr-3"></i>
-                                    Agotados
-                                </a>
+
+                                <div x-show="showDropdown"
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-150"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95"
+                                     @click.away="showDropdown = false"
+                                     x-cloak
+                                     class="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                    <a href="{{ route('reports') }}"
+                                        :class="!isTicketsPage ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
+                                        class="w-full flex items-center px-4 py-3 text-sm">
+                                        <i class="fas fa-shopping-cart w-5 text-center mr-3"></i>
+                                        Ventas
+                                    </a>
+                                    <a href="{{ route('reports.tickets') }}"
+                                        :class="isTicketsPage ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'"
+                                        class="w-full flex items-center px-4 py-3 text-sm border-t border-gray-200 dark:border-gray-700">
+                                        <i class="fas fa-receipt w-5 text-center mr-3"></i>
+                                        Boletas
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -524,11 +547,10 @@
                                 <tr>
                                     <th scope="col" class="p-4">Producto</th>
                                     <th scope="col" class="p-4">Lote</th>
-                                    <th scope="col" class="p-4 whitespace-nowrap">P. Costo</th>
-                                    <th scope="col" class="p-4 whitespace-nowrap">Stock</th>
-                                    <th scope="col" class="p-4 whitespace-nowrap">Físico</th>
-                                    <th scope="col" class="p-4 whitespace-nowrap">Diferencia</th>
+                                    <th scope="col" class="p-4 whitespace-nowrap">Precio</th>
+                                    <th scope="col" class="p-4 whitespace-nowrap">Cantidad</th>
                                     <th scope="col" class="p-4 whitespace-nowrap">Importe</th>
+                                    <th scope="col" class="p-4 whitespace-nowrap">Fecha y Hora</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -548,33 +570,22 @@
                                             <span class="text-sm text-gray-600 dark:text-gray-400" x-text="item.lote || 'N/A'"></span>
                                         </td>
                                         <td class="px-4 py-3">
-                                            <span class="font-semibold text-gray-900 dark:text-white font-numbers" x-text="'S/ ' + (item.precio_costo || 0).toFixed(2)"></span>
+                                            <span class="font-semibold text-gray-900 dark:text-white font-numbers" x-text="'S/ ' + (item.precio || 0).toFixed(2)"></span>
                                         </td>
                                         <td class="px-4 py-3">
-                                            <span class="font-semibold text-gray-900 dark:text-white" x-text="item.stock_actual || 0"></span>
+                                            <span class="font-semibold text-gray-900 dark:text-white" x-text="item.cantidad || 0"></span>
                                         </td>
                                         <td class="px-4 py-3">
-                                            <input type="number" 
-                                                x-model="item.stock_fisico"
-                                                min="0"
-                                                class="w-20 px-2 py-1 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                                                placeholder="0">
+                                            <span class="font-semibold text-gray-900 dark:text-white font-numbers" x-text="'S/ ' + ((item.precio || 0) * (item.cantidad || 0)).toFixed(2)"></span>
                                         </td>
-                                        <td class="px-4 py-3">
-                                            <span class="font-semibold text-gray-900 dark:text-white" 
-                                                :class="((item.stock_fisico || 0) - (item.stock_actual || 0)) < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'"
-                                                x-text="((item.stock_fisico || 0) - (item.stock_actual || 0))"></span>
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            <span class="font-semibold font-numbers" 
-                                                :class="((item.stock_fisico || 0) - (item.stock_actual || 0)) < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'"
-                                                x-text="'S/ ' + ((((item.stock_fisico || 0) - (item.stock_actual || 0)) * (item.precio_costo || 0)).toFixed(2))"></span>
+                                                                        <td class="px-4 py-3">
+                                            <span class="text-sm text-gray-600 dark:text-gray-400" x-text="formatearFechaHora(item.fecha_hora)"></span>
                                         </td>
                                     </tr>
                                 </template>
                                 <template x-if="inventarioFiltrado.length === 0">
                                     <tr>
-                                        <td colspan="7" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="6" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                                             <i class="fas fa-box-open text-3xl mb-2 opacity-50"></i>
                                             <p>No se encontraron registros</p>
                                         </td>
@@ -591,7 +602,7 @@
                                     <div class="px-4 pt-4 pb-3 flex items-center justify-between border-b border-gray-100 dark:border-gray-700">
                                         <div class="flex items-center gap-3 flex-1">
                                             <div class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900/30">
-                                                <i class="fas fa-boxes text-base text-blue-600 dark:text-blue-400"></i>
+                                                <i class="fas fa-shopping-cart text-base text-blue-600 dark:text-blue-400"></i>
                                             </div>
                                             <div class="flex-1">
                                                 <p class="text-sm font-semibold text-gray-900 dark:text-white" x-text="item.nombre"></p>
@@ -599,8 +610,8 @@
                                             </div>
                                         </div>
                                         <div class="text-right ml-3">
-                                            <p class="text-sm font-bold text-gray-900 dark:text-white" x-text="item.stock_actual || 0"></p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">Stock</p>
+                                            <p class="text-sm font-bold text-gray-900 dark:text-white font-numbers" x-text="'S/ ' + (((item.precio || 0) * (item.cantidad || 0)).toFixed(2))"></p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">Importe</p>
                                         </div>
                                     </div>
                                     
@@ -613,32 +624,20 @@
                                                 <p class="text-sm font-medium text-gray-900 dark:text-white" x-text="item.lote || 'N/A'"></p>
                                             </div>
                                             <div class="flex flex-col">
-                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">P. Costo</p>
-                                                <p class="text-sm font-semibold text-gray-900 dark:text-white font-numbers" x-text="'S/ ' + ((item.precio_costo || 0).toFixed(2))"></p>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Precio</p>
+                                                <p class="text-sm font-semibold text-gray-900 dark:text-white font-numbers" x-text="'S/ ' + ((item.precio || 0).toFixed(2))"></p>
                                             </div>
                                             <div class="flex flex-col">
-                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Stock</p>
-                                                <p class="text-sm font-semibold text-gray-900 dark:text-white" x-text="item.stock_actual || 0"></p>
-                                            </div>
-                                            <div class="flex flex-col">
-                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Físico</p>
-                                                <input type="number" 
-                                                    x-model="item.stock_fisico"
-                                                    min="0"
-                                                    class="w-full px-2 py-1 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                                                    placeholder="0">
-                                            </div>
-                                            <div class="flex flex-col">
-                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Diferencia</p>
-                                                <p class="text-sm font-semibold" 
-                                                    :class="((item.stock_fisico || 0) - (item.stock_actual || 0)) < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'"
-                                                    x-text="((item.stock_fisico || 0) - (item.stock_actual || 0))"></p>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Cantidad</p>
+                                                <p class="text-sm font-semibold text-gray-900 dark:text-white" x-text="item.cantidad || 0"></p>
                                             </div>
                                             <div class="flex flex-col">
                                                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Importe</p>
-                                                <p class="text-sm font-semibold font-numbers" 
-                                                    :class="((item.stock_fisico || 0) - (item.stock_actual || 0)) < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'"
-                                                    x-text="'S/ ' + ((((item.stock_fisico || 0) - (item.stock_actual || 0)) * (item.precio_costo || 0)).toFixed(2))"></p>
+                                                <p class="text-sm font-semibold text-gray-900 dark:text-white font-numbers" x-text="'S/ ' + (((item.precio || 0) * (item.cantidad || 0)).toFixed(2))"></p>
+                                            </div>
+                                            <div class="col-span-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Fecha y Hora</p>
+                                                <p class="text-sm font-medium text-gray-900 dark:text-white" x-text="formatearFechaHora(item.fecha_hora)"></p>
                                             </div>
                                         </div>
                                     </div>
@@ -647,7 +646,7 @@
                             <template x-if="inventarioFiltrado.length === 0">
                                 <div class="py-16 text-center">
                                     <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                        <i class="fas fa-box-open text-2xl text-gray-400 dark:text-gray-500"></i>
+                                        <i class="fas fa-receipt text-2xl text-gray-400 dark:text-gray-500"></i>
                                     </div>
                                     <p class="text-gray-500 dark:text-gray-400 font-medium">No se encontraron registros</p>
                                 </div>

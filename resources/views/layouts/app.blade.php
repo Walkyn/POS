@@ -29,6 +29,10 @@ else if (path.includes('/sales/close-shift')) page = 'sales.close-shift';
 else if (path.includes('/sales/shift-history')) page = 'sales.shift-history';
 else if (path.includes('/sales')) page = 'sales';
 else if (path.includes('/reports')) page = 'reports';
+else if (path.includes('/informes')) page = 'informes';
+else if (path.includes('/settings')) page = 'settings';
+else if (path.includes('/profile')) page = 'profile';
+else if (path.includes('/database')) page = 'database';
 " :class="{ 'dark text-bodydark bg-boxdark-2': darkMode === true }">
 
     <!-- ===== Preloader Start ===== -->

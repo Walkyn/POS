@@ -10,5 +10,10 @@ class ReportsController extends Controller
     {
         return view('reports.index');
     }
+
+    public function tickets()
+    {
+        return view('reports.tickets');
+    }
 }
 

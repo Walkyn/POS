@@ -219,10 +219,12 @@
                             <button id="filterDropdownButton"
                                 @click="filterOpen = !filterOpen; if (filterOpen) cerrarTodasLasSecciones();"
                                 type="button"
-                                class="w-full md:w-auto flex items-center justify-center py-2.5 px-6 text-sm font-medium focus:outline-none rounded-lg border bg-white text-gray-900 border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                                <i class="fas fa-filter mr-2"></i>
-                                Filtrar
-                                <svg class="ml-2 w-4 h-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': filterOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="w-full md:w-auto flex items-center justify-between py-2.5 px-4 md:px-6 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                                <span class="flex items-center">
+                                    <i class="fas fa-cog mr-2 text-gray-400"></i>
+                                    Opciones
+                                </span>
+                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': filterOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                 </svg>
                             </button>
@@ -240,7 +242,7 @@
                                 x-cloak
                                 class="absolute z-50 w-full md:w-80 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                                 <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                                    <h6 class="text-sm font-medium text-gray-900 dark:text-white">Filtros</h6>
+                                    <h6 class="text-sm font-medium text-gray-900 dark:text-white">Opciones</h6>
                                     <button type="button" id="limpiar-filtros"
                                         @click="fechaInicio = ''; fechaFin = ''; estadosSeleccionados = []; filtrarProductos();"
                                         class="text-sm font-medium text-primary-600 dark:text-primary-500 hover:underline">
@@ -250,6 +252,30 @@
 
                                 <div id="accordion-flush" data-accordion="collapse" data-active-classes="text-black dark:text-white"
                                     data-inactive-classes="text-gray-500 dark:text-gray-400">
+                                    {{-- Acciones --}}
+                                    <h2 id="acciones-heading">
+                                        <button type="button"
+                                            class="flex items-center justify-between w-full py-3 px-4 text-sm font-medium text-left text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                            data-accordion-target="#acciones-body" aria-expanded="false"
+                                            aria-controls="acciones-body">
+                                            <span>Acciones</span>
+                                            <svg aria-hidden="true" data-accordion-icon="" class="w-5 h-5 shrink-0"
+                                                fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                            </svg>
+                                        </button>
+                                    </h2>
+                                    <div id="acciones-body" class="hidden" aria-labelledby="acciones-heading" aria-expanded="false">
+                                        <div class="py-3 px-4 font-light border-b border-gray-200 dark:border-gray-700">
+                                            <button type="button"
+                                                @click="exportarExcel(); filterOpen = false"
+                                                class="w-full flex items-center justify-center py-2.5 px-4 text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 rounded-lg dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-900">
+                                                <i class="fas fa-file-excel mr-2"></i>
+                                                Exportar
+                                            </button>
+                                        </div>
+                                    </div>
                                     {{-- Fecha de Vencimiento --}}
                                     <h2 id="fecha-vencimiento-heading">
                                         <button type="button"
@@ -416,7 +442,6 @@
                                     <th scope="col" class="p-4 whitespace-nowrap">Stock</th>
                                     <th scope="col" class="p-4 whitespace-nowrap">P. Costo</th>
                                     <th scope="col" class="p-4 whitespace-nowrap">Valor Total</th>
-                                    <th scope="col" class="p-4 whitespace-nowrap">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -443,19 +468,11 @@
                                         <td class="px-4 py-3">
                                             <span class="text-sm font-semibold text-gray-900 dark:text-white" x-text="'S/ ' + (producto.precio_costo * producto.stock_actual).toFixed(2)"></span>
                                         </td>
-                                        <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                            <button type="button"
-                                                @click.stop="exportarExcel()"
-                                                title="Exportar a Excel"
-                                                class="flex items-center justify-center text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded text-sm p-2 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-900">
-                                                <i class="fas fa-file-excel h-4 w-4"></i>
-                                            </button>
-                                        </td>
                                     </tr>
                                 </template>
                                 <template x-if="productosFiltrados.length === 0">
                                     <tr>
-                                        <td colspan="7" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="6" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                                             <i class="fas fa-calendar-times text-3xl mb-2 opacity-50"></i>
                                             <p>No se encontraron productos</p>
                                         </td>
@@ -508,16 +525,6 @@
                                                 <p class="text-base font-bold text-gray-900 dark:text-white" x-text="'S/ ' + (producto.precio_costo * producto.stock_actual).toFixed(2)"></p>
                                             </div>
                                         </div>
-                                    </div>
-                                    
-                                    {{-- Botón de acción --}}
-                                    <div class="px-4 pb-4 pt-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-                                        <button type="button"
-                                            @click.stop="exportarExcel()"
-                                            title="Exportar a Excel"
-                                            class="w-full flex items-center justify-center text-green-700 hover:text-white border border-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-2 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
-                                            <i class="fas fa-file-excel h-4 w-4"></i>
-                                        </button>
                                     </div>
                                 </div>
                             </template>

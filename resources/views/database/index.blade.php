@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Reportes')
+@section('title', 'Base de datos')
 
 @section('content')
     <main>
@@ -7,7 +7,7 @@
             <!-- Breadcrumb Start -->
             <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-title-md2 font-bold text-black dark:text-white">
-                    Reporte de ventas
+                    Gestión de base de datos
                 </h2>
 
                 <nav>
@@ -15,7 +15,7 @@
                         <li>
                             <a class="font-medium" href="{{ route('home') }}">Inicio /</a>
                         </li>
-                        <li class="font-medium text-primary">Reportes</li>
+                        <li class="font-medium text-primary">Base de datos</li>
                     </ol>
                 </nav>
             </div>
@@ -28,7 +28,7 @@
             <!-- ====== Table Section Start ====== -->
             <div class="flex flex-col gap-10">
                 <!-- ====== Table Database Start ====== -->
-                @include('partials.table.table-reports')
+                @include('partials.table.table-database')
                 <!-- ====== Table Database End ====== -->
             </div>
             <!-- ====== Table Section End ====== -->

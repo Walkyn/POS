@@ -68,6 +68,8 @@
         }
     ],
     movimientosFiltrados: [],
+    isExportingExcel: false,
+    exportProgress: 0,
     init() {
         this.filtrarMovimientos();
     },
@@ -146,6 +148,28 @@
             month: '2-digit', 
             year: 'numeric' 
         });
+    },
+    exportarExcel() {
+        // Resetear progreso
+        this.exportProgress = 0;
+        // Mostrar modal de loading
+        this.isExportingExcel = true;
+        
+        // Simular exportación con progreso (aquí iría la llamada real al backend)
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 2;
+            this.exportProgress = progress;
+            if (progress >= 100) {
+                clearInterval(interval);
+                setTimeout(() => {
+                    this.isExportingExcel = false;
+                    this.exportProgress = 0;
+                    // Aquí se descargaría el archivo Excel
+                    console.log('Exportar a Excel');
+                }, 300);
+            }
+        }, 40);
     }
 }" x-init="filtrarMovimientos()">
     <div>
@@ -208,10 +232,12 @@
                             <button id="filterDropdownButton"
                                 @click="filterOpen = !filterOpen; if (filterOpen) cerrarTodasLasSecciones();"
                                 type="button"
-                                class="w-full md:w-auto flex items-center justify-center py-2.5 px-6 text-sm font-medium focus:outline-none rounded-lg border bg-white text-gray-900 border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                                <i class="fas fa-filter mr-2"></i>
-                                Filtrar
-                                <svg class="ml-2 w-4 h-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': filterOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="w-full md:w-auto flex items-center justify-between py-2.5 px-4 md:px-6 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                                <span class="flex items-center">
+                                    <i class="fas fa-cog mr-2 text-gray-400"></i>
+                                    Opciones
+                                </span>
+                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': filterOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                 </svg>
                             </button>
@@ -229,7 +255,7 @@
                                 x-cloak
                                 class="absolute z-50 w-full md:w-80 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                                 <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                                    <h6 class="text-sm font-medium text-gray-900 dark:text-white">Filtros</h6>
+                                    <h6 class="text-sm font-medium text-gray-900 dark:text-white">Opciones</h6>
                                     <button type="button" id="limpiar-filtros"
                                         @click="fechaInicio = ''; fechaFin = ''; tiposSeleccionados = []; usuariosSeleccionados = []; filtrarMovimientos();"
                                         class="text-sm font-medium text-primary-600 dark:text-primary-500 hover:underline">
@@ -239,6 +265,30 @@
 
                                 <div id="accordion-flush" data-accordion="collapse" data-active-classes="text-black dark:text-white"
                                     data-inactive-classes="text-gray-500 dark:text-gray-400">
+                                    {{-- Acciones --}}
+                                    <h2 id="acciones-heading">
+                                        <button type="button"
+                                            class="flex items-center justify-between w-full py-3 px-4 text-sm font-medium text-left text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                            data-accordion-target="#acciones-body" aria-expanded="false"
+                                            aria-controls="acciones-body">
+                                            <span>Acciones</span>
+                                            <svg aria-hidden="true" data-accordion-icon="" class="w-5 h-5 shrink-0"
+                                                fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                            </svg>
+                                        </button>
+                                    </h2>
+                                    <div id="acciones-body" class="hidden" aria-labelledby="acciones-heading" aria-expanded="false">
+                                        <div class="py-3 px-4 font-light border-b border-gray-200 dark:border-gray-700">
+                                            <button type="button"
+                                                @click="exportarExcel(); filterOpen = false"
+                                                class="w-full flex items-center justify-center py-2.5 px-4 text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 rounded-lg dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-900">
+                                                <i class="fas fa-file-excel mr-2"></i>
+                                                Exportar
+                                            </button>
+                                        </div>
+                                    </div>
                                     {{-- Fecha --}}
                                     <h2 id="fecha-heading">
                                         <button type="button"
@@ -572,5 +622,8 @@
             </div>
         </section>
     </div>
+    
+    {{-- Modal de Carga - Exportación a Excel --}}
+    @include('inventory.modals.export-loading')
 </main>
 
